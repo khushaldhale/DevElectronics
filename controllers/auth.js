@@ -28,8 +28,8 @@ exports.register = asyncHandler(async (req, res, next) => {
 		return res.status(200)
 			.json({
 				success: true,
-				message: "user i registered successfully",
-				data: is_existing_user
+				message: "user is registered successfully",
+				data: user
 			})
 	}
 

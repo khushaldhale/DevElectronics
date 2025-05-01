@@ -26,6 +26,11 @@ dbConnect()
 const cloudinaryConnect = require("./config/cloudinary");
 cloudinaryConnect()
 
+const authRoutes = require("./routes/authRoutes");
+app.use("/api/v1/auth", authRoutes);
+
+const itemRoutes = require("./routes/itemRoutes");
+app.use("/api/v1/items", itemRoutes)
 
 app.use((error, req, res, next) => {
 
