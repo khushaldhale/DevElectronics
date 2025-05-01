@@ -1,0 +1,46 @@
+const express = require("express");
+const app = express();
+const mongoose = require("mongoose")
+require("dotenv").config()
+
+app.use(express.json());
+
+app.get("/", (req, res) => {
+	return res.status(200)
+		.json({
+			success: true,
+			message: "server is up and running "
+		})
+})
+
+const dbConnect = require("./config/database");
+dbConnect()
+
+const PORT = process.env.PORT || 4001;
+const server = app.listen(PORT, () => {
+	console.log("server is listening at : ", PORT)
+})
+
+const serverClose = () => {
+	server.close((error) => {
+		if (error) {
+			console.log("errror occured  while closing downn the server : ");
+			process.exit(1)
+		}
+
+
+		mongoose.connection.close(false)
+			.then((data) => {
+				console.log("database connection is closed successfully : ");
+				process.exit(0)
+			})
+			.catch((error) => {
+				console.log("error occured while shutting down the database : ");
+				process.exit(1)
+			})
+
+	})
+}
+
+process.on("SIGINT", serverClose);
+process.on("SIGTERM", serverClose); 
