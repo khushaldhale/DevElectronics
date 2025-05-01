@@ -3,12 +3,14 @@ const app = express();
 const mongoose = require("mongoose")
 require("dotenv").config()
 const fileUpload = require("express-fileupload");
+const cookies = require("cookie-parser");
 
 app.use(express.json());
 app.use(fileUpload({
 	tempFileDir: "/temp/",
 	useTempFiles: true
 }))
+app.use(cookies())
 
 app.get("/", (req, res) => {
 	return res.status(200)
