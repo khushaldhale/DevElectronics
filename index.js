@@ -4,6 +4,7 @@ const mongoose = require("mongoose")
 require("dotenv").config()
 const fileUpload = require("express-fileupload");
 const cookies = require("cookie-parser");
+const cors = require("cors")
 
 app.use(express.json());
 app.use(fileUpload({
@@ -11,6 +12,12 @@ app.use(fileUpload({
 	useTempFiles: true
 }))
 app.use(cookies())
+app.use(cors({
+	origin: "http://localhost:5173",
+	credentials: true
+
+}))
+
 
 app.get("/", (req, res) => {
 	return res.status(200)
@@ -31,6 +38,12 @@ app.use("/api/v1/auth", authRoutes);
 
 const itemRoutes = require("./routes/itemRoutes");
 app.use("/api/v1/items", itemRoutes)
+
+const shopRoutes = require("./routes/shopRoutes");
+app.use("/api/v1/shops", shopRoutes);
+
+const billRoutes = require("./routes/billRoutes");
+app.use("/api/v1/bills", billRoutes);
 
 app.use((error, req, res, next) => {
 

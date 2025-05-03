@@ -98,3 +98,25 @@ exports.updateItem = asyncHandler(async (req, res, next) => {
 	}
 
 })
+
+
+exports.getItem = asyncHandler(async (req, res, next) => {
+	const item_id = req.params.id;
+	if (!item_id) {
+		return next(new ErrorHandler(400, "kindly provide an item id"))
+	}
+
+	const item = await itemModel.findById(item_id);
+
+	if (item) {
+		return res.status(200)
+			.json({
+				success: true,
+				message: 'item is fetched successfully',
+				data: item
+			})
+	}
+	else {
+		return next(new ErrorHandler(400, "invalid item id"))
+	}
+})
