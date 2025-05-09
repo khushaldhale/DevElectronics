@@ -22,8 +22,6 @@ exports.createShop = asyncHandler(async (req, res, next) => {
 	}
 })
 
-
-
 exports.getShop = asyncHandler(async (req, res, next) => {
 	const shop = await shopModel.find({});
 

@@ -45,6 +45,12 @@ app.use("/api/v1/shops", shopRoutes);
 const billRoutes = require("./routes/billRoutes");
 app.use("/api/v1/bills", billRoutes);
 
+const contactRoutes = require("./routes/contactRoutes");
+app.use("/api/v1/contacts", contactRoutes);
+
+const categoryRoutes = require("./routes/categoryRoutes");
+app.use("/api/v1/categories", categoryRoutes);
+
 app.use((error, req, res, next) => {
 
 	console.log("error occured : ", error);

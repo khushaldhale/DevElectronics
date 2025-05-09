@@ -20,6 +20,14 @@ const itemSchema = new mongoose.Schema({
 			},
 			message: "price cannot be negative"
 		}
+	},
+	item_img: {
+		type: String,
+		required: [true, "Kindly provide an Item image"]
+	},
+	category_id: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "CATEGORY"
 	}
 })
 

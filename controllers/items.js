@@ -2,12 +2,16 @@ const itemModel = require("../models/item");
 const userModel = require("../models/user");
 const asyncHandler = require("../utils/asyncHandler");
 const ErrorHandler = require("../utils/errorHandler");
-
+const fileUpload = require("../utils/fileUpload");
+const categoryModel = require("../models/category");
 
 exports.createItem = asyncHandler(async (req, res, next) => {
 
-	const { item_name, item_desc, price } = req.body;
-	const user_id = req.decode._id;
+	const { item_name, item_desc, price, category_id } = req.body;
+	const item_img = req.files.item_img;
+
+	console.log(item_name, item_desc, price, category_id, item_img)
+
 
 	if (!item_name || !item_desc || !price) {
 		return next(new ErrorHandler(400, "kindly provide all details"))
@@ -19,10 +23,13 @@ exports.createItem = asyncHandler(async (req, res, next) => {
 		return next(new ErrorHandler(400, "Item already exists, kindly create a new item"))
 	}
 
-	const item = await itemModel.create({ item_name, item_desc, price });
 
-	const user = await userModel.findByIdAndUpdate(user_id, { $push: { items: item._id } }, { new: true, runValidators: true })
 
+	const secure_url = await fileUpload(item_img, "DevElectronics")
+
+	const item = await itemModel.create({ item_name, item_desc, price, item_img: secure_url, category_id });
+
+	const category = await categoryModel.findByIdAndUpdate(category_id, { $push: { items: item._id } }, { new: true, runValidators: true })
 
 	return res.status(200)
 		.json({
@@ -35,22 +42,16 @@ exports.createItem = asyncHandler(async (req, res, next) => {
 exports.deleteItem = asyncHandler(async (req, res, next) => {
 
 	const item_id = req.params.id;
-	const user_id = req.decode._id;
 
 	if (!item_id) {
 		return next(new ErrorHandler(400, "kindly provide an item id"))
 	}
-
 	const deleted_item = await itemModel.findByIdAndDelete(item_id);
-
 	if (!deleted_item) {
 		return next(new ErrorHandler(400, "invalid item id or item that are you trying to delete does not exists"))
 	}
-
-	const user = await userModel.findByIdAndUpdate(user_id, { $pull: { items: item_id } }, { new: true, runValidators: true })
-
-
-	if (user && deleted_item) {
+	const category = await categoryModel.findByIdAndUpdate(deleted_item.category_id, { $pull: { items: item_id } }, { new: true, runValidators: true })
+	if (category && deleted_item) {
 
 		return res.status(200)
 			.json({
@@ -76,17 +77,24 @@ exports.getAllItems = asyncHandler(async (req, res, next) => {
 exports.updateItem = asyncHandler(async (req, res, next) => {
 	const item_id = req.params.id;
 
-	const { item_name, item_desc, price } = req.body;
+	const { item_name, item_desc, price, category_id, item_img } = req.body;
+	const file_item_img = req?.files?.item_img;
 
 	if (!item_id) {
 		return next(new ErrorHandler(400, "kindly provide an item id"))
 	}
 
-	if (!item_name || !item_desc || !price) {
+	if (!item_name || !item_desc || !price || !category_id) {
 		return next(new ErrorHandler(400, "kindly provide all details"))
 	}
+	let secure_url = ""
+	if (!item_img) {
 
-	const updated_item = await itemModel.findByIdAndUpdate(item_id, { item_name, item_desc, price }, { new: true, runValidators: true })
+		//  have to delete the previous image
+		secure_url = await fileUpload(file_item_img, "DevElectronics")
+
+	}
+	const updated_item = await itemModel.findByIdAndUpdate(item_id, { item_name, item_desc, price, category_id, item_img: item_img ? item_img : secure_url }, { new: true, runValidators: true })
 
 	if (updated_item) {
 		return res.status(200)
@@ -98,7 +106,6 @@ exports.updateItem = asyncHandler(async (req, res, next) => {
 	}
 
 })
-
 
 exports.getItem = asyncHandler(async (req, res, next) => {
 	const item_id = req.params.id;
@@ -120,3 +127,33 @@ exports.getItem = asyncHandler(async (req, res, next) => {
 		return next(new ErrorHandler(400, "invalid item id"))
 	}
 })
+
+
+exports.searchItem = asyncHandler(async (req, res, next) => {
+	const { item_name } = req.body;
+
+	if (!item_name) {
+		return next(new ErrorHandler(400, "Item name is not provided yet"));
+	}
+
+	// Ensure that the search term is formatted correctly for phrase searches
+	const query = item_name.includes(" ") ? `"${item_name}"` : item_name;
+
+	try {
+		// Explicitly search with $text in the item_name field
+		const items = await itemModel.find(
+			{ $text: { $search: query } },    // Text search in the indexed field
+			{ score: { $meta: "textScore" } } // Include relevance score
+		)
+			.sort({ score: { $meta: "textScore" } }) // Sort by relevance score
+			.limit(10); // Limit the number of results
+
+		return res.status(200).json({
+			success: true,
+			message: "Items are fetched successfully",
+			data: items,
+		});
+	} catch (error) {
+		return next(new ErrorHandler(500, `Error while fetching items: ${error.message}`));
+	}
+});
