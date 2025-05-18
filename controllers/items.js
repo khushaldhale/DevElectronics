@@ -3,21 +3,20 @@ const userModel = require("../models/user");
 const asyncHandler = require("../utils/asyncHandler");
 const ErrorHandler = require("../utils/errorHandler");
 const fileUpload = require("../utils/fileUpload");
-const categoryModel = require("../models/category");
+const companyModel = require("../models/company");
 
 exports.createItem = asyncHandler(async (req, res, next) => {
 
-	const { item_name, item_desc, price, category_id } = req.body;
+	const { item_name, item_desc, item_price, category_id, company_id } = req.body;
 	const item_img = req.files.item_img;
 
-	console.log(item_name, item_desc, price, category_id, item_img)
+	console.log(req.body)
 
-
-	if (!item_name || !item_desc || !price) {
+	if (!item_name || !item_desc || !item_price || !category_id || !company_id) {
 		return next(new ErrorHandler(400, "kindly provide all details"))
 	}
 
-	const is_existing_item = await itemModel.findOne({ item_name, price });
+	const is_existing_item = await itemModel.findOne({ item_name, item_price });
 
 	if (is_existing_item) {
 		return next(new ErrorHandler(400, "Item already exists, kindly create a new item"))
@@ -27,9 +26,9 @@ exports.createItem = asyncHandler(async (req, res, next) => {
 
 	const secure_url = await fileUpload(item_img, "DevElectronics")
 
-	const item = await itemModel.create({ item_name, item_desc, price, item_img: secure_url, category_id });
+	const item = await itemModel.create({ item_name, item_desc, item_price, item_img: secure_url, category_id, company_id });
 
-	const category = await categoryModel.findByIdAndUpdate(category_id, { $push: { items: item._id } }, { new: true, runValidators: true })
+	const company = await companyModel.findByIdAndUpdate(company_id, { $push: { items: item._id } }, { new: true, runValidators: true })
 
 	return res.status(200)
 		.json({
@@ -50,8 +49,9 @@ exports.deleteItem = asyncHandler(async (req, res, next) => {
 	if (!deleted_item) {
 		return next(new ErrorHandler(400, "invalid item id or item that are you trying to delete does not exists"))
 	}
-	const category = await categoryModel.findByIdAndUpdate(deleted_item.category_id, { $pull: { items: item_id } }, { new: true, runValidators: true })
-	if (category && deleted_item) {
+	const company = await companyModel.findByIdAndUpdate(deleted_item.company_id, { $pull: { items: item_id } }, { new: true, runValidators: true })
+
+	if (company && deleted_item) {
 
 		return res.status(200)
 			.json({
@@ -77,14 +77,14 @@ exports.getAllItems = asyncHandler(async (req, res, next) => {
 exports.updateItem = asyncHandler(async (req, res, next) => {
 	const item_id = req.params.id;
 
-	const { item_name, item_desc, price, category_id, item_img } = req.body;
+	const { item_name, item_desc, item_price, category_id, item_img, company_id } = req.body;
 	const file_item_img = req?.files?.item_img;
 
 	if (!item_id) {
 		return next(new ErrorHandler(400, "kindly provide an item id"))
 	}
 
-	if (!item_name || !item_desc || !price || !category_id) {
+	if (!item_name || !item_desc || !item_price || !category_id || !company_id) {
 		return next(new ErrorHandler(400, "kindly provide all details"))
 	}
 	let secure_url = ""
@@ -94,7 +94,7 @@ exports.updateItem = asyncHandler(async (req, res, next) => {
 		secure_url = await fileUpload(file_item_img, "DevElectronics")
 
 	}
-	const updated_item = await itemModel.findByIdAndUpdate(item_id, { item_name, item_desc, price, category_id, item_img: item_img ? item_img : secure_url }, { new: true, runValidators: true })
+	const updated_item = await itemModel.findByIdAndUpdate(item_id, { item_name, item_desc, item_price, category_id, item_img: item_img ? item_img : secure_url, company_id }, { new: true, runValidators: true })
 
 	if (updated_item) {
 		return res.status(200)
@@ -128,7 +128,6 @@ exports.getItem = asyncHandler(async (req, res, next) => {
 	}
 })
 
-
 exports.searchItem = asyncHandler(async (req, res, next) => {
 	const { item_name } = req.body;
 
@@ -157,3 +156,19 @@ exports.searchItem = asyncHandler(async (req, res, next) => {
 		return next(new ErrorHandler(500, `Error while fetching items: ${error.message}`));
 	}
 });
+
+
+exports.getItemsByCompany = asyncHandler(async (req, res, next) => {
+
+	const company_id = req.params.company_id;
+
+	const items = await itemModel.find({ company_id });
+
+	return res.status(200)
+		.json({
+			success: true,
+			message: items.length > 0 ? "Items are fetched successfully" : "No items are created here",
+			data: items
+
+		})
+})

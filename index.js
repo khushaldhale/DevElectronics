@@ -13,7 +13,7 @@ app.use(fileUpload({
 }))
 app.use(cookies())
 app.use(cors({
-	origin: "http://localhost:5173",
+	origin: ["http://localhost:5173", "http://develectronics.shop", "http://localhost:4173", "https://develectronics.shop", "https://www.develectronics.shop", "http://www.develectronics.shop", "http://64.227.132.210.shop", "https://64.227.132.210.shop"],
 	credentials: true
 
 }))
@@ -50,6 +50,10 @@ app.use("/api/v1/contacts", contactRoutes);
 
 const categoryRoutes = require("./routes/categoryRoutes");
 app.use("/api/v1/categories", categoryRoutes);
+
+const companyRoutes = require("./routes/companyRoutes");
+app.use("/api/v1/companies", companyRoutes);
+
 
 app.use((error, req, res, next) => {
 

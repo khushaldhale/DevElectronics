@@ -28,11 +28,24 @@ exports.generateBill = asyncHandler(async (req, res, next) => {
 
 
 })
+
+
 exports.getAllBills = asyncHandler(async (req, res, next) => {
 	const bills = await billModel.find({})
 		.sort({ createdAt: -1 })
-		.populate("shop_details")
-		.populate("purchased_items.item_info"); // 🔑 Populate nested reference
+		.populate([
+			{
+				path: "shop_details",
+				model: "SHOPDETAIL"  // Explicitly mention the model name
+			},
+			{
+				path: "purchased_items.item_info",
+				populate: {
+					path: "category_id",
+					model: "CATEGORY"  // Replace with your actual model name
+				}
+			}
+		]);
 
 	return res.status(200).json({
 		success: true,

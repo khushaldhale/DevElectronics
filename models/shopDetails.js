@@ -26,7 +26,31 @@ const shopDetailsSchema = new mongoose.Schema(
 		shop_contact: {
 			type: Number,
 			required: [true, "Shop contact is required"]
+		},
+		account_name: {
+			type: String,
+			required: [true, "Account Name is required"],
+			trim: true
+		},
+		account_number: {
+			type: String,
+			required: [true, "Account Number is required"]
+		},
+		ifsc_code: {
+			type: String,
+			required: [true, "IFSC code is required"],
+			trim: true
+		},
+		bank_name: {
+			type: String,
+			required: [true, "Bank Name is required"],
+			trim: true
+		},
+		swift_code: {
+			type: String,
+			required: [true, "Swift code is required"]
 		}
+
 	}
 )
 

@@ -2,23 +2,24 @@ const categoryModel = require("../models/category");
 const userModel = require("../models/user");
 const asyncHandler = require("../utils/asyncHandler");
 const ErrorHandler = require("../utils/errorHandler");
+const itemModel = require("../models/item")
 
 
 exports.createCategory = asyncHandler(async (req, res, next) => {
-	const { category_name } = req.body;
+	const { category_name, HSN } = req.body;
 	const user_id = req.decode._id;
 
-	if (!category_name) {
-		return next(new ErrorHandler(400, "kindly provide the name of the category"))
+	if (!category_name || !HSN) {
+		return next(new ErrorHandler(400, "kindly provide  details"))
 	}
 
-	const is_existing_category = await categoryModel.findOne({ category_name });
+	const is_existing_category = await categoryModel.findOne({ $or: [{ category_name }, { HSN }] });
 
 	if (is_existing_category) {
-		return next(new ErrorHandler(400, "category already exists, kindly create a  new one"))
+		return next(new ErrorHandler(400, "category or HSN already exists, kindly create a  new one"))
 	}
 
-	const category = await categoryModel.create({ category_name });
+	const category = await categoryModel.create({ category_name, HSN });
 
 
 	const user = await userModel.findByIdAndUpdate(user_id, { $push: { categories: category._id } }, { new: true, runValidators: true })
@@ -72,21 +73,22 @@ exports.deleteCategory = asyncHandler(async (req, res, next) => {
 	}
 })
 
-exports.getParticularCategory = asyncHandler(async (req, res, next) => {
+//   we are returning items here not categories
+exports.getItemsByCategory = asyncHandler(async (req, res, next) => {
 	const category_id = req.params.id;
 
 	if (!category_id) {
 		return next(new ErrorHandler(400, "kindly provide an category id"))
 	}
 
-	const category = await categoryModel.findById(category_id).populate("items");
+	const items = await itemModel.find({ category_id })
 
-	if (category) {
-		return res.status(200)
-			.json({
-				success: true,
-				message: "category is fetched successfully",
-				data: category
-			})
-	}
+
+	return res.status(200)
+		.json({
+			success: true,
+			message: items.length > 0 ? "items are fetched successfully" : "No items are created here",
+			data: items
+		})
+
 })

@@ -61,7 +61,7 @@ exports.login = asyncHandler(async (req, res, next) => {
 
 		return res.cookie("token", token, {
 			httpOnly: true,
-			sameSite: "None",
+			sameSite: "Lax",
 			expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
 			secure: true
 		})
@@ -80,7 +80,7 @@ exports.login = asyncHandler(async (req, res, next) => {
 exports.logout = asyncHandler(async (req, res, next) => {
 	return res.cookie("token", null, {
 		httpOnly: true,
-		sameSite: "None",
+		sameSite: "Lax",
 		secure: true,
 		expires: new Date(Date.now())
 	})

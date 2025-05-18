@@ -1,3 +1,4 @@
+const { hashSync } = require("bcrypt");
 const mongoose = require("mongoose");
 
 
@@ -8,11 +9,16 @@ const categorySchema = new mongoose.Schema(
 			required: [true, "category name is required"],
 			trim: true
 		},
-		items: {
+		HSN: {
+			type: String,
+			required: [true, "HSN is required"],
+			trim: true
+		},
+		companies: {
 			type: [
 				{
 					type: mongoose.Schema.Types.ObjectId,
-					ref: "ITEM"
+					ref: "COMPANY"
 				}
 			]
 		}

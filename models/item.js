@@ -10,7 +10,7 @@ const itemSchema = new mongoose.Schema({
 		type: String,
 		required: [true, "Item desc is required"]
 	},
-	price: {
+	item_price: {
 		type: Number,
 		required: [true, "Price is required"],
 		validate: {
@@ -28,6 +28,10 @@ const itemSchema = new mongoose.Schema({
 	category_id: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: "CATEGORY"
+	},
+	company_id: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "COMPANY"
 	}
 })
 
