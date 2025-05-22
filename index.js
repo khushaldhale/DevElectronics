@@ -4,8 +4,10 @@ const mongoose = require("mongoose")
 require("dotenv").config()
 const fileUpload = require("express-fileupload");
 const cookies = require("cookie-parser");
-const cors = require("cors")
+const cors = require("cors");
+const { rateLimit } = require("express-rate-limit")
 
+app.set('trust proxy', 1);
 app.use(express.json());
 app.use(fileUpload({
 	tempFileDir: "/temp/",
@@ -17,7 +19,15 @@ app.use(cors({
 	credentials: true
 
 }))
-
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	limit: 150, // Limit each IP to 100 requests per windowMs
+	statusCode: 429, // HTTP status code for Too Many Requests
+	message: {
+		status: 429,
+		error: "Too many requests. Please try again after 15 minutes."
+	}
+});
 
 app.get("/", (req, res) => {
 	return res.status(200)
@@ -33,8 +43,21 @@ dbConnect()
 const cloudinaryConnect = require("./config/cloudinary");
 cloudinaryConnect()
 
+// auth  limiter is applied to auth routes only 
 const authRoutes = require("./routes/authRoutes");
-app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/auth", rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	limit: 30, // Limit each IP to 100 requests per windowMs
+	statusCode: 429, // HTTP status code for Too Many Requests
+	message: {
+		status: 429,
+		error: "Too many requests. Please try again after 15 minutes."
+	}
+}), authRoutes);
+
+// This is global limiter applied to the further routes only 
+app.use(limiter);
+
 
 const itemRoutes = require("./routes/itemRoutes");
 app.use("/api/v1/items", itemRoutes)
@@ -54,6 +77,16 @@ app.use("/api/v1/categories", categoryRoutes);
 const companyRoutes = require("./routes/companyRoutes");
 app.use("/api/v1/companies", companyRoutes);
 
+const { createCounter } = require("./controllers/counter");
+app.post("/api/v1/counter", createCounter);
+
+// 404 Handler
+app.use((req, res) => {
+	return res.status(404).json({
+		success: false,
+		message: "Route not found"
+	});
+});
 
 app.use((error, req, res, next) => {
 
@@ -68,7 +101,7 @@ app.use((error, req, res, next) => {
 		})
 	}
 
-	return res.status(200)
+	return res.status(statusCode)
 		.json({
 			success: false,
 			message: errorMessage

@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
 
-
-
 const billSchema = new mongoose.Schema(
 	{
+		bill_id: {
+			type: Number,
+			required: [true, "Bill Id is required"]
+		},
 		shop_details: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "SHOPDETAIL"
