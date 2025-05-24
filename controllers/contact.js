@@ -3,19 +3,17 @@ const asyncHandler = require("../utils/asyncHandler");
 const ErrorHandler = require("../utils/errorHandler");
 const sendCustomMail = require("../utils/nodemailer");
 
-
-
 exports.createContact = asyncHandler(async (req, res, next) => {
 
-	const { fname, lname, email, contact, subject, message } = req.body;
+  const { fname, lname, email, contact, subject, message } = req.body;
 
-	if (!fname || !lname || !email || !contact || !subject || !message) {
-		return next(new ErrorHandler(400, "kindly provide all details"))
-	}
+  if (!fname || !lname || !email || !contact || !subject || !message) {
+    return next(new ErrorHandler(400, "kindly provide all details"))
+  }
 
-	const contact_doc = await contactModel.create({ fname, lname, email, contact, subject, message });
+  const contact_doc = await contactModel.create({ fname, lname, email, contact, subject, message });
 
-	const emailBody = `
+  const emailBody = `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; background-color: #f9f9f9; border-radius: 10px; overflow: hidden; border: 1px solid #ddd;">
     <div style="background-color: #222; color: #fff; padding: 20px; text-align: center;">
       <h2 style="margin: 0;">Dev Electronics - Audio Solutions</h2>
@@ -51,16 +49,16 @@ exports.createContact = asyncHandler(async (req, res, next) => {
 `;
 
 
-	//  have to hardcode the  devdas email out here 
-	sendCustomMail("Dev Electronics", email, subject, emailBody);
+  //  have to hardcode the  devdas email out here 
+  sendCustomMail("Dev Electronics", "devdas.repal81@gmail.com", subject, emailBody);
 
-	if (contact_doc) {
-		return res.status(200)
-			.json({
-				success: true,
-				message: "contact is created successfully",
-				data: contact_doc
-			})
-	}
+  if (contact_doc) {
+    return res.status(200)
+      .json({
+        success: true,
+        message: "contact is created successfully",
+        data: contact_doc
+      })
+  }
 
 })
